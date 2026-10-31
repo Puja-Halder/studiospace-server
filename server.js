@@ -3,6 +3,7 @@ import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
 import connectDB from "./config/db.js";
+import studioRoutes from "./routes/studioRoutes.js";
 
 dotenv.config();
 
@@ -27,6 +28,8 @@ app.get("/api/health", (req, res) => {
     message: "StudioSpace server is running successfully!",
   });
 });
+
+app.use("/api/studios", studioRoutes);
 
 const PORT = process.env.PORT || 5000;
 
