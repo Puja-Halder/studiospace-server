@@ -6,6 +6,7 @@ import { toNodeHandler } from "better-auth/node";
 import connectDB from "./config/db.js";
 import { auth, connectAuthDB } from "./config/auth.js";
 import studioRoutes from "./routes/studioRoutes.js";
+import bookingRoutes from "./routes/bookingRoutes.js";
 import { requireAuth } from "./middleware/authMiddleware.js";
 
 dotenv.config();
@@ -48,6 +49,7 @@ app.get("/api/me", requireAuth, (req, res) => {
 });
 
 app.use("/api/studios", studioRoutes);
+app.use("/api/bookings", bookingRoutes);
 
 const PORT = process.env.PORT || 5000;
 
