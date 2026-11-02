@@ -219,6 +219,170 @@ router.get("/mine", requireAuth, async (req, res) => {
   }
 });
 
+router.patch("/:id", requireAuth, async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid studio ID.",
+      });
+    }
+
+    const {
+      name,
+      description,
+      category,
+      pricePerHour,
+      capacity,
+      facilities,
+      images,
+    } = req.body;
+
+    const city = req.body.city || req.body.location?.city;
+    const address = req.body.address || req.body.location?.address;
+
+    const allowedCategories = [
+      "photography",
+      "workspace",
+      "event",
+      "meeting",
+    ];
+
+    if (
+      typeof name !== "string" ||
+      !name.trim() ||
+      typeof description !== "string" ||
+      !description.trim() ||
+      !allowedCategories.includes(category) ||
+      typeof city !== "string" ||
+      !city.trim() ||
+      typeof address !== "string" ||
+      !address.trim() ||
+      !Array.isArray(images) ||
+      images.length === 0 ||
+      images.length > 5 ||
+      images.some(
+        (image) =>
+          typeof image !== "string" ||
+          !/^https?:\/\//i.test(image)
+      )
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "Please provide valid studio information.",
+      });
+    }
+
+    if (
+      !Number.isFinite(Number(pricePerHour)) ||
+      Number(pricePerHour) < 1 ||
+      !Number.isInteger(Number(capacity)) ||
+      Number(capacity) < 1
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "Please provide a valid price and capacity.",
+      });
+    }
+
+    const studio = await Studio.findOneAndUpdate(
+      {
+        _id: id,
+        hostId: req.user.id,
+      },
+      {
+        name: name.trim(),
+        description: description.trim(),
+        category,
+        location: {
+          city: city.trim(),
+          address: address.trim(),
+        },
+        pricePerHour: Number(pricePerHour),
+        capacity: Number(capacity),
+        facilities: Array.isArray(facilities)
+          ? facilities.filter((item) => typeof item === "string")
+          : [],
+        images,
+      },
+      {
+        new: true,
+        runValidators: true,
+      }
+    );
+
+    if (!studio) {
+      return res.status(404).json({
+        success: false,
+        message: "Studio not found or you are not authorized to edit it.",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Studio updated successfully.",
+      data: studio,
+    });
+  } catch (error) {
+    console.error("Studio update failed:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Failed to update studio.",
+    });
+  }
+});
+
+router.delete("/:id", requireAuth, async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid studio ID.",
+      });
+    }
+
+    const studio = await Studio.findOneAndUpdate(
+      {
+        _id: id,
+        hostId: req.user.id,
+        isActive: true,
+      },
+      {
+        isActive: false,
+      },
+      {
+        new: true,
+        runValidators: true,
+      }
+    );
+
+    if (!studio) {
+      return res.status(404).json({
+        success: false,
+        message: "Studio not found or you are not authorized to delete it.",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Studio deleted successfully.",
+      data: studio,
+    });
+  } catch (error) {
+    console.error("Studio deletion failed:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Failed to delete studio.",
+    });
+  }
+});
+
 router.get("/:id", async (req, res) => {
   try {
     const { id } = req.params;
