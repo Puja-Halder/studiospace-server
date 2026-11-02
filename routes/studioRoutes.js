@@ -383,6 +383,55 @@ router.delete("/:id", requireAuth, async (req, res) => {
   }
 });
 
+router.patch("/:id/reactivate", requireAuth, async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid studio ID.",
+      });
+    }
+
+    const studio = await Studio.findOneAndUpdate(
+      {
+        _id: id,
+        hostId: req.user.id,
+        isActive: false,
+      },
+      {
+        isActive: true,
+      },
+      {
+        new: true,
+        runValidators: true,
+      }
+    );
+
+    if (!studio) {
+      return res.status(404).json({
+        success: false,
+        message:
+          "Inactive studio not found or you are not authorized to reactivate it.",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Studio reactivated successfully.",
+      data: studio,
+    });
+  } catch (error) {
+    console.error("Studio reactivation failed:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Failed to reactivate studio.",
+    });
+  }
+});
+
 router.get("/:id", async (req, res) => {
   try {
     const { id } = req.params;
