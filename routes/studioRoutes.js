@@ -10,6 +10,17 @@ const escapeRegex = (value) => {
   return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 };
 
+const allowedCategories = [
+  "photography",
+  "sound-stage",
+  "podcast",
+  "music",
+  "art-workshop",
+  "workspace",
+  "event",
+  "meeting",
+];
+
 router.post("/", requireAuth, async (req, res) => {
   try {
     console.log("Received studio data:", req.body);
@@ -19,6 +30,7 @@ router.post("/", requireAuth, async (req, res) => {
       description,
       category,
       pricePerHour,
+      securityDeposit = 0,
       capacity,
       facilities,
       images,
@@ -26,13 +38,6 @@ router.post("/", requireAuth, async (req, res) => {
 
     const city = req.body.city || req.body.location?.city;
     const address = req.body.address || req.body.location?.address;
-
-    const allowedCategories = [
-      "photography",
-      "workspace",
-      "event",
-      "meeting",
-    ];
 
     if (
       typeof name !== "string" ||
@@ -61,6 +66,16 @@ router.post("/", requireAuth, async (req, res) => {
       return res.status(400).json({
         success: false,
         message: "Please provide a valid hourly price.",
+      });
+    }
+
+    if (
+      !Number.isFinite(Number(securityDeposit)) ||
+      Number(securityDeposit) < 0
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "Please provide a valid security deposit.",
       });
     }
 
@@ -96,6 +111,7 @@ router.post("/", requireAuth, async (req, res) => {
         address: address.trim(),
       },
       pricePerHour: Number(pricePerHour),
+      securityDeposit: Number(securityDeposit),
       capacity: Number(capacity),
       facilities: Array.isArray(facilities)
         ? facilities.filter((item) => typeof item === "string")
@@ -235,6 +251,7 @@ router.patch("/:id", requireAuth, async (req, res) => {
       description,
       category,
       pricePerHour,
+      securityDeposit = 0,
       capacity,
       facilities,
       images,
@@ -242,13 +259,6 @@ router.patch("/:id", requireAuth, async (req, res) => {
 
     const city = req.body.city || req.body.location?.city;
     const address = req.body.address || req.body.location?.address;
-
-    const allowedCategories = [
-      "photography",
-      "workspace",
-      "event",
-      "meeting",
-    ];
 
     if (
       typeof name !== "string" ||
@@ -287,6 +297,16 @@ router.patch("/:id", requireAuth, async (req, res) => {
       });
     }
 
+    if (
+      !Number.isFinite(Number(securityDeposit)) ||
+      Number(securityDeposit) < 0
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "Please provide a valid security deposit.",
+      });
+    }
+
     const studio = await Studio.findOneAndUpdate(
       {
         _id: id,
@@ -301,6 +321,7 @@ router.patch("/:id", requireAuth, async (req, res) => {
           address: address.trim(),
         },
         pricePerHour: Number(pricePerHour),
+        securityDeposit: Number(securityDeposit),
         capacity: Number(capacity),
         facilities: Array.isArray(facilities)
           ? facilities.filter((item) => typeof item === "string")

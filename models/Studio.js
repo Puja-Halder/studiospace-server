@@ -17,7 +17,16 @@ const studioSchema = new mongoose.Schema(
     category: {
       type: String,
       required: true,
-      enum: ["photography", "workspace", "event", "meeting"],
+      enum: [
+        "photography",
+        "sound-stage",
+        "podcast",
+        "music",
+        "art-workshop",
+        "workspace",
+        "event",
+        "meeting",
+      ],
     },
 
     location: {
@@ -35,6 +44,12 @@ const studioSchema = new mongoose.Schema(
       type: Number,
       required: true,
       min: 1,
+    },
+
+    securityDeposit: {
+      type: Number,
+      default: 0,
+      min: 0,
     },
 
     capacity: {

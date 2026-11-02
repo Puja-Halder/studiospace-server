@@ -1,4 +1,3 @@
-
 import express from "express";
 import mongoose from "mongoose";
 import Booking from "../models/Booking.js";
@@ -97,7 +96,22 @@ router.post("/", async (req, res) => {
       });
     }
 
-    const totalPrice = totalHours * studio.pricePerHour;
+    const pricePerHour = Number(studio.pricePerHour);
+    const securityDeposit = Number(studio.securityDeposit ?? 0);
+
+    if (
+      !Number.isFinite(pricePerHour) ||
+      pricePerHour < 0 ||
+      !Number.isFinite(securityDeposit) ||
+      securityDeposit < 0
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "Studio pricing information is invalid.",
+      });
+    }
+
+    const totalPrice = totalHours * pricePerHour;
 
     const booking = await Booking.create({
       studioId: studio._id,
@@ -107,6 +121,7 @@ router.post("/", async (req, res) => {
       endTime: end,
       totalHours,
       totalPrice,
+      securityDeposit,
       status: "pending",
     });
 
