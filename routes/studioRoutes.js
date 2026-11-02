@@ -383,6 +383,46 @@ router.delete("/:id", requireAuth, async (req, res) => {
   }
 });
 
+router.delete("/:id/permanent", requireAuth, async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid studio ID.",
+      });
+    }
+
+    const studio = await Studio.findOneAndDelete({
+      _id: id,
+      hostId: req.user.id,
+      isActive: false,
+    });
+
+    if (!studio) {
+      return res.status(404).json({
+        success: false,
+        message:
+          "Inactive studio not found or you are not authorized to delete it permanently.",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Studio permanently deleted.",
+      data: studio,
+    });
+  } catch (error) {
+    console.error("Permanent studio deletion failed:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Failed to permanently delete studio.",
+    });
+  }
+});
+
 router.patch("/:id/reactivate", requireAuth, async (req, res) => {
   try {
     const { id } = req.params;
