@@ -67,7 +67,10 @@ export const auth = betterAuth({
     },
   },
 
-  trustedOrigins: ["http://localhost:3000"],
+  trustedOrigins: [
+    "http://localhost:3000",
+    "https://studiospace-client-one-eta.vercel.app",
+  ],
 
   account: {
     accountLinking: {
